@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: es-node
+    environment:
+      - discovery.type=single-node # Chạy 1 node duy nhất cho local dev
+      - xpack.security.enabled=false # Tắt bảo mật (username/password) để dev cho lẹ, không dùng trên production
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # Giới hạn RAM Elasticsearch sử dụng (512MB) để không làm đơ máy
+    ports:
+      - "9200:9200" # Port để Backend (Spring Boot) gọi API tới ES
+    volumes:
+      - es_data:/usr/share/elasticsearch/data # Mount volume để giữ lại data khi restart container
+    networks:
+      - elastic-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.2
+    container_name: kibana-ui
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200 # Chỉ định ES host cho Kibana
+    ports:
+      - "5601:5601" # Port để truy cập giao diện Kibana trên trình duyệt
+    depends_on:
+      - elasticsearch # Kibana sẽ đợi ES chạy lên trước
+    networks:
+      - elastic-net
+
+volumes:
+  es_data: # Khai báo volume
+
+networks:
+  elastic-net: # Khai báo network chung cho cả 2 service
+    driver: bridge
