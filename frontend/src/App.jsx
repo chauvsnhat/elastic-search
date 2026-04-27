@@ -23,6 +23,8 @@ function App() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const limit = 20;
   const searchContainerRef = useRef(null);
 
   // Click outside to close dropdown
@@ -59,14 +61,15 @@ function App() {
   }, [debouncedQuery]);
 
   // Execute Full Text Search
-  const handleSearch = (searchStr) => {
-    const q = searchStr || query;
+  const handleSearch = (searchStr, targetPage = 1) => {
+    const q = searchStr ?? query;
     if (!q.trim()) return;
     
     setShowSuggestions(false);
     setLoading(true);
+    setPage(targetPage);
     
-    fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(q)}`, {
+    fetch(`http://localhost:3000/api/search?q=${encodeURIComponent(q)}&page=${targetPage}&limit=${limit}`, {
       cache: 'no-store', // Không dùng cache
       headers: {
         'Pragma': 'no-cache',
@@ -86,13 +89,38 @@ function App() {
 
   const onKeyDown = (e) => {
     if (e.key === 'Enter') {
-      handleSearch();
+      handleSearch(query, 1);
     }
   };
 
   const handleSuggestionClick = (suggestion) => {
     setQuery(suggestion.name);
-    handleSearch(suggestion.name);
+    handleSearch(suggestion.name, 1);
+  };
+
+  const renderPagination = () => {
+    if (!results || results.total <= limit) return null;
+    const totalPages = Math.ceil(results.total / limit);
+
+    return (
+      <div className="pagination">
+        <button 
+          disabled={page === 1} 
+          onClick={() => handleSearch(query, page - 1)}
+          className="page-btn"
+        >
+          Previous
+        </button>
+        <span className="page-info">Page {page} of {totalPages}</span>
+        <button 
+          disabled={page === totalPages} 
+          onClick={() => handleSearch(query, page + 1)}
+          className="page-btn"
+        >
+          Next
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -118,7 +146,7 @@ function App() {
             onKeyDown={onKeyDown}
             onFocus={() => setShowSuggestions(true)}
           />
-          <button className="search-btn" onClick={() => handleSearch()}>
+          <button className="search-btn" onClick={() => handleSearch(query, 1)}>
             Search
           </button>
         </div>
@@ -178,6 +206,8 @@ function App() {
                 No results found. Try a different query.
               </div>
             )}
+            
+            {renderPagination()}
           </div>
         )
       )}

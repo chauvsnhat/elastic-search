@@ -35,6 +35,6 @@ Dự án này triển khai hệ thống tìm kiếm Full-Text Search hiệu năn
 **Hướng dẫn sử dụng nhanh:**
 1. Chạy Elasticsearch + Kibana: `docker-compose up -d`
 2. Cài đặt và khởi chạy Backend (Tạo dữ liệu tự động): 
-   - Đi tới `backend` thư mục -> `npm install` -> `node setupIndices.js` -> `npm start` (Chạy ở port 3000)
+   - Đi tới `backend` thư mục -> `npm install` -> `node setupIndices.js` -> `npm start` (hoặc `node server.js` - Chạy ở port 3000)
 3. Chạy Frontend UI:
    - Đi tới thư mục `frontend` -> `npm install` -> `npm run dev`

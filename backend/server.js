@@ -41,13 +41,26 @@ app.get('/api/search/suggest', async (req, res) => {
 
         const data = await esSearch({
             query: {
-                multi_match: {
-                    query: q,
-                    type: "bool_prefix",
-                    fields: [
-                        "product_name",
-                        "product_name._2gram",
-                        "product_name._3gram"
+                bool: {
+                    should: [
+                        {
+                            multi_match: {
+                                query: q,
+                                type: "bool_prefix",
+                                fields: [
+                                    "product_name",
+                                    "product_name._2gram",
+                                    "product_name._3gram"
+                                ]
+                            }
+                        },
+                        {
+                            multi_match: {
+                                query: q,
+                                fields: ["product_name", "brand"],
+                                fuzziness: "AUTO"
+                            }
+                        }
                     ]
                 }
             },
@@ -71,6 +84,10 @@ app.get('/api/search/suggest', async (req, res) => {
 app.get('/api/search', async (req, res) => {
     try {
         const { q } = req.query;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const from = (page - 1) * limit;
+
         if (!q) {
             return res.json({ timeTook: 0, total: 0, hits: [] });
         }
@@ -91,7 +108,8 @@ app.get('/api/search', async (req, res) => {
                     description: {}
                 }
             },
-            size: 20
+            from: from,
+            size: limit
         });
 
         const hits = data.hits.hits.map(h => ({
